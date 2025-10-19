@@ -1,0 +1,3 @@
+psycopg[binary,pool]
+pyyaml
+boto3
