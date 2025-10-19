@@ -1,47 +1,28 @@
-import os
+import time
+from uploads import get_expired_uploads, delete_upload_from_database, delete_upload_from_storage
 
-from database import establish_connection
+def main():
+    print("Retrieving expired uploads...")
 
-def get_expired_uploads():
-    try:
-        conn, cursor = establish_connection()
+    uploads = get_expired_uploads()
 
-        cursor.execute("SELECT upload_id, name FROM uploads WHERE DATEDIFF(NOW(), upload_date) > 1")
-        expired_uploads = cursor.fetchall()
+    print(f"Attempting to delete {len(uploads)} uploads...")
 
-        cursor.close()
-        conn.close()
+    for upload in uploads:
+        print(f"Deleting upload: {upload['title']} ({upload['upload_id']})...")
 
-        return expired_uploads
-    except:
-        raise
-    finally:
-        cursor.close()
-        conn.close()
+        delete_upload_from_database(upload['upload_id'])
+        delete_upload_from_storage(upload['upload_id'])
 
-def delete_upload(upload_id):
-    try:
-        conn, cursor = establish_connection()
+        print(f"Upload deleted successfully.")
 
-        cursor.execute("DELETE FROM uploads WHERE upload_id = %d", (upload_id,))
-        conn.commit()
-    except:
-        raise
-    finally:
-        cursor.close()
-        conn.close()
+    print("All uploads deleted successfully.")
 
-def delete_expired_uploads():
-    try:
-        uploads = get_expired_uploads()
+if __name__ == "__main__":
+    while True:
+        try:
+            main()
+        except Exception as e:
+            print(f"Error: {e}")
 
-        for upload in uploads:
-            upload_id = upload[0]
-            upload_name = upload[1]
-
-            delete_upload(upload_id)
-            os.remove(f"/srv/share/uploads/{upload_name}")
-    except Exception as e:
-        print(f"Error: {e}")
-
-delete_expired_uploads()
+        time.sleep(86400)

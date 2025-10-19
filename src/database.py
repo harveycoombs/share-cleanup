@@ -1,17 +1,13 @@
-import mysql.connector
-import json
+import os
+import psycopg
+import yaml
 
-def establish_connection():
-    with open("../config.json", "r") as f:
-        config = json.load(f)
+CONFIG = yaml.safe_load(open(f"{os.getcwd().replace("\\", "/")}/config.yaml"))
 
-    conn = mysql.connector.connect(
-        host=config["host"],
-        user=config["user"],
-        password=config["password"],
-        database=config["database"]
+def get_connection():
+    return psycopg.connect(
+        host=CONFIG["database"]["host"],
+        user=CONFIG["database"]["user"],
+        password=CONFIG["database"]["password"],
+        dbname=CONFIG["database"]["schema"]
     )
-
-    cursor = conn.cursor()
-
-    return conn, cursor
